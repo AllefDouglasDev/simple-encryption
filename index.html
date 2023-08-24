@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Code</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      .wrapper {
+        width: 80vw;
+        height: 410px;
+        display: flex;
+        gap: 20px;
+      }
+
+      label {
+        display: inline-block;
+        font-size: 20px;
+        font-weight: bold;
+        padding-bottom: 6px;
+      }
+
+      textarea {
+        width: 100%;
+        height: 150px;
+        font-size: 30px;
+      }
+
+      .box {
+        width: 100%;
+        height: 500px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        position: relative;
+      }
+
+      .result {
+        width: 100%;
+        height: 150px;
+        overflow: auto;
+        border: 1px solid red;
+        padding: 10px;
+        font-size: 30px;
+      }
+
+      button {
+        height: 30px;
+      }
+
+      .copy-btn {
+        width: fit-content;
+        height: 30px;
+
+        position: absolute;
+        z-index: 100;
+        top: 350px;
+        right: 12px;
+      }
+
+      .hidden {
+        display: none;
+      }
+      
+      #copy-feedback {
+        font-size: 30px;
+        color: green;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Encrypt your message</h1>
+      <div class="wrapper">
+        <div class="box">
+          <div class="field">
+            <label for="encode">Encode</label>
+            <textarea id="encode"></textarea>
+          </div>
+          <button id="encode-btn">Encode</button>
+          <div id="encode-result" class="result"></div>
+          <button id="copy-encoded-btn" class="copy-btn">Copy</button>
+        </div>
+        <div class="box">
+          <div class="field">
+            <label for="decode">Decode</label>
+            <textarea id="decode"></textarea>
+          </div>
+          <button id="decode-btn">Decode</button>
+          <div id="decode-result" class="result"></div>
+          <button id="copy-decoded-btn" class="copy-btn">Copy</button>
+        </div>
+      </div>
+      <div id="copy-feedback" class="hidden">copiado...</div>
+    </main>
+
+    <script>
+      const encodeBtn = document.getElementById("encode-btn");
+      const decodeBtn = document.getElementById("decode-btn");
+      const copyEncodedBtn = document.getElementById("copy-encoded-btn");
+      const copyDecodedBtn = document.getElementById("copy-decoded-btn");
+
+      encodeBtn.addEventListener("click", () => {
+        const encodeField = document.getElementById("encode");
+        const encodeResult = document.getElementById("encode-result");
+        console.log(encodeField.value);
+        if (encodeField.value) {
+          const result = encode(encodeField.value);
+          encodeResult.innerHTML = result;
+        }
+      });
+
+      decodeBtn.addEventListener("click", () => {
+        const decodeField = document.getElementById("decode");
+        const decodeResult = document.getElementById("decode-result");
+        if (decodeField.value) {
+          const result = decode(decodeField.value);
+          decodeResult.innerHTML = result;
+        }
+      });
+
+      copyEncodedBtn.addEventListener("click", () => {
+        copy("encode-result");
+      });
+
+      copyDecodedBtn.addEventListener("click", () => {
+        copy("decode-result");
+      });
+
+      const keys = {
+        a: "!",
+        e: "*",
+        i: "#",
+        o: "&",
+        u: "%",
+        b: "@",
+        c: "$",
+        d: "^",
+        f: "_",
+        g: "(",
+        h: ")",
+        j: "[",
+        k: "]",
+      };
+
+      function mixWord(word) {
+        if (word.length <= 2) {
+          return word;
+        }
+        let wordCopy = word.trim();
+        let newWord = "";
+        while (true) {
+          if (wordCopy.length <= 2) {
+            newWord += wordCopy;
+            break;
+          }
+          if (wordCopy.length >= 4) {
+            const part = wordCopy.substring(0, 4);
+            wordCopy = wordCopy.substring(4).trim();
+            const [w, x, y, z] = part.split("");
+            newWord += y + z + w + x;
+          }
+          if (wordCopy.length === 3) {
+            const part = wordCopy.substring(0, 3);
+            wordCopy = wordCopy.substring(3).trim();
+            const [w, x, y] = part.split("");
+            newWord += y + x + w;
+          }
+        }
+        return newWord;
+      }
+
+      function replaceLetterWithKeys(str) {
+        return str
+          .split("")
+          .map((c) => keys[c] || c)
+          .join("");
+      }
+
+      function replaceKeysWithLetter(str) {
+        return str
+          .split("")
+          .map((c) => Object.keys(keys).find((key) => keys[key] === c) || c)
+          .join("");
+      }
+
+      function encode(str) {
+        const words = str.toLowerCase().replaceAll('\n', ' ').split(" ");
+        const mixedWords = words.map(mixWord);
+        return replaceLetterWithKeys(mixedWords.join(" "));
+      }
+
+      function decode(str) {
+        const words = str.split(" ");
+        const mixedWords = words.map(mixWord);
+        return replaceKeysWithLetter(mixedWords.join(" "));
+      }
+
+      function copy(elementId) {
+        const element = document.getElementById(elementId);
+        const range = document.createRange();
+        range.selectNode(element);
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        document.execCommand("copy");
+        selection.removeAllRanges();
+        showCopyFeedback();
+      }
+
+      function showCopyFeedback() {
+        document.getElementById("copy-feedback").classList.remove("hidden");
+        setTimeout(() => {
+          document.getElementById("copy-feedback").classList.add("hidden");
+        }, 2000)
+      }
+    </script>
+  </body>
+</html>
